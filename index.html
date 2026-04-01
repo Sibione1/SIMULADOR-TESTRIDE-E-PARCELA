@@ -12,9 +12,6 @@
   
   <!-- Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  
-  <!-- Supabase Client -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <style>
     :root {
@@ -146,6 +143,7 @@
       display: inline-flex;
       align-items: center;
       gap: .5rem;
+      text-decoration: none;
     }
 
     .btn-primary { background: var(--brand); color: #fff; }
@@ -182,19 +180,10 @@
 
     .form-group input:focus { border-color: var(--brand); box-shadow: 0 0 0 4px var(--brand-l); }
 
-    /* Slider */
-    .plan-slider-wrap input[type=range] { appearance: none; -webkit-appearance: none; width: 100%; background: transparent; }
-    .plan-slider-wrap input[type=range]::-webkit-slider-thumb {
-      -webkit-appearance: none; width: 28px; height: 28px; border-radius: 50%;
-      background: var(--brand); cursor: pointer; margin-top: -10px;
-      border: 4px solid #fff; box-shadow: 0 4px 10px rgba(2,132,199,0.3);
-    }
-    .plan-slider-wrap input[type=range]::-webkit-slider-runnable-track { height: 8px; border-radius: 20px; background: #e2e8f0; }
-
-    /* Simulation Items */
+    /* Cost Row for Despesas de Rodagem */
     .cost-row {
       display: grid;
-      grid-template-columns: 2.5rem 1fr 5rem 5rem 5rem 2rem;
+      grid-template-columns: 2.5rem 1fr auto auto auto 2rem;
       gap: .75rem;
       align-items: center;
       padding: 1rem;
@@ -211,598 +200,991 @@
       display: flex; align-items: center; justify-content: center; border-radius: 10px; font-size: 1rem;
     }
 
-    .sim-input-bare { font-weight: 700; border: none; background: transparent; outline: none; font-size: .85rem; width: 100%; }
-    .sim-field-label { font-size: .55rem; color: var(--muted); font-weight: 800; text-transform: uppercase; margin-bottom: .25rem; }
-    .sim-input-box { width: 100%; padding: .4rem .6rem; border: 1px solid var(--border); border-radius: 8px; font-size: .75rem; font-family: 'DM Mono'; }
+    .cr-name {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .cr-name-main {
+      font-weight: 700;
+      font-size: .9rem;
+    }
+
+    .cr-name-sub {
+      font-size: .65rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      font-weight: 600;
+    }
+
+    .cr-field {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      min-width: 100px;
+    }
+
+    .cr-field-label {
+      font-size: .55rem;
+      color: var(--muted);
+      font-weight: 800;
+      text-transform: uppercase;
+      margin-bottom: .25rem;
+    }
+
+    .cr-field-value {
+      width: 100%;
+      padding: .4rem .6rem;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: .75rem;
+      font-family: 'DM Mono';
+      background: #fff;
+      cursor: pointer;
+      transition: all .2s;
+    }
+
+    .cr-field-value:hover {
+      border-color: var(--brand);
+    }
+
+    /* Summary boxes */
+    .summary-boxes {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+
+    .summary-box {
+      padding: 1rem 1.25rem;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+    }
+
+    .summary-box-label {
+      font-size: .65rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: .5rem;
+    }
+
+    .summary-box-value {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 1.5rem;
+    }
+
+    .summary-box.daily {
+      background: #f8fafc;
+    }
+
+    .summary-box.total {
+      background: var(--amber-l);
+      color: var(--amber);
+    }
 
     /* Picker Drum */
-    .picker-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); backdrop-filter: blur(2px); z-index: 2000; display: none; align-items: flex-end; justify-content: center; }
+    .picker-overlay { 
+      position: fixed; 
+      inset: 0; 
+      background: rgba(0,0,0,0.4); 
+      backdrop-filter: blur(2px); 
+      z-index: 2000; 
+      display: none; 
+      align-items: flex-end; 
+      justify-content: center; 
+    }
     .picker-overlay.open { display: flex; }
-    .picker-container { background: #fff; width: 100%; max-width: 500px; border-radius: 24px 24px 0 0; padding: 1.5rem; animation: slideUp .3s ease-out; }
+    .picker-container { 
+      background: #fff; 
+      width: 100%; 
+      max-width: 500px; 
+      border-radius: 24px 24px 0 0; 
+      padding: 1.5rem; 
+      animation: slideUp .3s ease-out; 
+    }
     @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
-    .picker-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
-    .picker-wheel-wrap { display: flex; justify-content: center; gap: .5rem; height: 200px; overflow: hidden; position: relative; mask-image: linear-gradient(to bottom, transparent, black 40%, black 60%, transparent); -webkit-mask-image: linear-gradient(to bottom, transparent, black 40%, black 60%, transparent); }
-    .picker-wheel { flex: 1; overflow-y: scroll; scroll-snap-type: y mandatory; scrollbar-width: none; -ms-overflow-style: none; }
+    .picker-header { 
+      display: flex; 
+      justify-content: space-between; 
+      align-items: center; 
+      margin-bottom: 1.5rem; 
+    }
+    
+    /* Picker Drum Improvements */
+    .picker-wheel-wrap { 
+      display: flex; 
+      justify-content: center; 
+      gap: .5rem; 
+      height: 250px; 
+      overflow: hidden; 
+      position: relative; 
+      mask-image: linear-gradient(to bottom, transparent, black 40%, black 60%, transparent); 
+      -webkit-mask-image: linear-gradient(to bottom, transparent, black 40%, black 60%, transparent); 
+    }
+    .picker-wheel { 
+      flex: 1; 
+      overflow-y: scroll; 
+      scroll-snap-type: y mandatory; 
+      scrollbar-width: none; 
+      -ms-overflow-style: none; 
+      scroll-behavior: smooth; /* Smooth scroll added */
+    }
     .picker-wheel::-webkit-scrollbar { display: none; }
-    .picker-wheel div { height: 40px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; color: var(--muted); scroll-snap-align: center; font-family: 'DM Mono', monospace; }
-    .picker-wheel div.selected { color: var(--brand); font-weight: 800; font-size: 1.5rem; }
-    .picker-selection-bar { position: absolute; top: 80px; left: 0; right: 0; height: 40px; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); pointer-events: none; }
-
-    /* Tables */
-    .tbl-wrap { overflow-x: auto; }
-    .tbl { width: 100%; border-collapse: collapse; font-size: .8rem; }
-    .tbl th { text-align: left; padding: 1rem; color: var(--muted); font-weight: 800; border-bottom: 2px solid var(--border); text-transform: uppercase; letter-spacing: .05em; font-size: .62rem; }
-    .tbl td { padding: 1rem; border-bottom: 1px solid var(--border); }
-    .tbl tr:hover { background: #f8fafc; }
-    .tbl .r { text-align: right; }
-
-    /* Modals */
-    .modal-overlay {
-      position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px);
-      z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 1rem;
-      opacity: 0; pointer-events: none; transition: .2s;
+    .picker-wheel div { 
+      height: 50px; 
+      display: flex; 
+      align-items: center; 
+      justify-content: center; 
+      font-size: 1.3rem; 
+      color: var(--muted); 
+      scroll-snap-align: center; 
+      font-family: 'DM Mono', monospace; 
+      transition: all 0.2s ease;
+      cursor: pointer;
     }
-    .modal-overlay.open { opacity: 1; pointer-events: all; }
-    .modal {
-      background: #fff; border-radius: 20px; width: 100%; max-width: 500px;
-      box-shadow: 0 30px 60px rgba(0,0,0,0.3); transform: translateY(20px); transition: .3s;
+    .picker-wheel div.selected { 
+      color: var(--brand); 
+      font-weight: 800; 
+      font-size: 1.8rem; 
+      transform: scale(1.1);
     }
-    .modal-overlay.open .modal { transform: translateY(0); }
-    .modal-header { padding: 1.5rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
-    .modal-body { padding: 1.5rem; }
-    .modal-footer { padding: 1rem 1.5rem; border-top: 1px solid var(--border); background: #fafbfc; border-radius: 0 0 20px 20px; display: flex; justify-content: flex-end; gap: .75rem; }
+    .picker-selection-bar {
+      position: absolute;
+      top: 50%;
+      left: 0;
+      right: 0;
+      height: 50px;
+      transform: translateY(-50%);
+      background: rgba(2, 132, 199, 0.08);
+      border-top: 1px solid rgba(2, 132, 199, 0.2);
+      border-bottom: 1px solid rgba(2, 132, 199, 0.2);
+      border-radius: 8px;
+      pointer-events: none;
+      z-index: -1;
+    }
 
     /* Toast */
-    #toast-area { position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 9999; display: flex; flex-direction: column; gap: .5rem; }
-    .toast { background: #1e293b; color: #fff; padding: .8rem 1.25rem; border-radius: 12px; font-size: .8rem; display: flex; align-items: center; gap: .75rem; box-shadow: 0 10px 25px rgba(0,0,0,0.2); animation: tIn .3s both; }
-    @keyframes tIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+    .toast {
+      position: fixed;
+      bottom: 2rem;
+      right: 2rem;
+      background: var(--sidebar);
+      color: #fff;
+      padding: 1rem 1.5rem;
+      border-radius: 12px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+      z-index: 3000;
+      animation: slideInRight .3s ease-out;
+    }
+    @keyframes slideInRight { from { transform: translateX(400px); } to { transform: translateX(0); } }
+    .toast.success { background: var(--green); }
 
-    /* Syne Utility */
-    .syne { font-family: 'Syne', sans-serif; }
-    .mono { font-family: 'DM Mono', monospace; }
+    /* Admin Panel */
+    .admin-view {
+      display: none;
+    }
+
+    .admin-view.active {
+      display: block;
+    }
+
+    .client-view {
+      display: block;
+    }
+
+    .client-view.hidden {
+      display: none;
+    }
+
+    .admin-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1rem;
+    }
+
+    .admin-table th {
+      background: #f8fafc;
+      padding: .75rem 1rem;
+      text-align: left;
+      font-size: .7rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      color: var(--muted);
+      border-bottom: 2px solid var(--border);
+    }
+
+    .admin-table td {
+      padding: .75rem 1rem;
+      border-bottom: 1px solid var(--border);
+      font-size: .85rem;
+    }
+
+    .admin-table tbody tr:hover {
+      background: #f8fafc;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: .25rem .5rem;
+      border-radius: 6px;
+      font-size: .7rem;
+      font-weight: 600;
+    }
+
+    .badge.lead {
+      background: var(--amber-l);
+      color: var(--amber);
+    }
+
+    .badge.active {
+      background: var(--green-l);
+      color: var(--green);
+    }
+
+    /* ==========================================================
+       RESPONSIVIDADE (MOBILE)
+       ========================================================== */
+    @media (max-width: 768px) {
+      header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+      }
+      .header-actions {
+        width: 100%;
+      }
+      .header-actions .btn {
+        width: 100%;
+        justify-content: center;
+      }
+      
+      .summary-boxes {
+        grid-template-columns: 1fr;
+      }
+
+      /* Reestruturação das linhas de custo para telas menores */
+      .cost-row {
+        grid-template-columns: 2.5rem 1fr 2rem;
+        grid-template-rows: auto auto auto auto;
+        row-gap: 0.5rem;
+        padding: 1rem 0.75rem;
+      }
+      .cr-icon { grid-column: 1; grid-row: 1; }
+      .cr-name { grid-column: 2; grid-row: 1; align-self: center; }
+      .btn-icon.del { grid-column: 3; grid-row: 1; justify-self: center; }
+      
+      .cr-field {
+        grid-column: 1 / 4;
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+        border-top: 1px dashed var(--border);
+        padding-top: 0.5rem;
+        min-width: 0;
+      }
+      .cr-field-label { 
+        margin-bottom: 0; 
+      }
+      .cr-field-value { 
+        width: auto; 
+        min-width: 100px; 
+        text-align: center; 
+      }
+    }
   </style>
 </head>
 <body>
 
-<div class="app-container">
-  
-  <header>
-    <div class="logo-wrap">
-      <div class="logo-icon"><i class="fa-solid fa-bolt"></i></div>
-      <div class="logo-text">J-START <span style="font-weight:400;color:var(--muted)">Simulator</span></div>
-    </div>
-    <div class="header-actions">
-      <button class="btn btn-ghost" onclick="syncData()"><i class="fa-solid fa-rotate"></i> Sync App</button>
-      <button class="btn btn-primary" onclick="openNewFlow()"><i class="fa-solid fa-user-plus"></i> Novo Cliente</button>
-    </div>
-  </header>
+<!-- Client View -->
+<div class="client-view" id="clientView">
+  <div class="app-container">
+    <header>
+      <div class="logo-wrap">
+        <div class="logo-icon"><i class="fa-solid fa-motorcycle"></i></div>
+        <div class="logo-text">J-Start</div>
+      </div>
+      <div class="header-actions">
+        <button class="btn btn-success" onclick="sendWhatsAppSimulation()">
+          <i class="fa-brands fa-whatsapp"></i> Enviar Simulação
+        </button>
+      </div>
+    </header>
 
-  <div class="grid2">
-    
-    <!-- Left Column: Settings & Visualization -->
-    <div style="display:flex; flex-direction:column; gap:1.5rem">
-      <div class="panel">
-        <div class="panel-header" style="flex-wrap:wrap; gap:1rem;">
-          <span class="panel-title"><i class="fa-solid fa-calculator" style="color:var(--brand)"></i> Configurações</span>
-          <div style="display:flex; align-items:center; gap:1rem; flex-wrap:wrap;">
-            <div style="display:flex; align-items:center; gap:.5rem">
-              <span style="font-size:.65rem;font-weight:800;color:var(--muted)">KM Mensal:</span>
-              <div id="sim-km-mensal-trigger" class="sim-input-box" onclick="openPicker('km_mensal','km_mensal','KM Mensal')" style="width:65px; text-align:center; padding:.3rem; border:1px solid var(--border); border-radius:8px; font-family:'DM Mono'; font-weight:700; cursor:pointer;">3000</div>
-              <input type="hidden" id="sim-km-mensal" value="3000">
+    <div class="grid2">
+      <!-- Left Panel: Simulator -->
+      <div>
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-title">
+              <i class="fa-solid fa-wrench" style="color:var(--amber)"></i>
+              Despesas de Rodagem (Combustão)
             </div>
-            <div style="display:flex; align-items:center; gap:.5rem">
-              <span style="font-size:.65rem;font-weight:800;color:var(--brand)">Entrada(R$):</span>
-              <div id="sim-caucao-trigger" class="sim-input-box" onclick="openPicker('caucao','caucao','Valor da Entrada / Caução')" style="width:85px; text-align:center; padding:.3rem; border:1px solid var(--brand); background:var(--brand-l); color:var(--brand-d); border-radius:8px; font-family:'DM Mono'; font-weight:800; cursor:pointer;">0,00</div>
+            <button class="btn btn-sm btn-primary" onclick="addItem()">
+              <i class="fa-solid fa-plus"></i> Adicionar
+            </button>
+          </div>
+          <div class="panel-body">
+            <div id="items-container"></div>
+            
+            <div class="summary-boxes">
+              <div class="summary-box daily">
+                <div class="summary-box-label">Custo Diário (Combustão)</div>
+                <div class="summary-box-value" id="daily-cost">R$ 0,00</div>
+              </div>
+              <div class="summary-box total">
+                <div class="summary-box-label">Gasto Mensal Total</div>
+                <div class="summary-box-value" id="monthly-total">R$ 0,00</div>
+              </div>
             </div>
           </div>
         </div>
-        <div class="panel-body">
-          <div class="form-group" style="margin-bottom:1.5rem">
-            <label style="display:flex; justify-content:space-between">Prazo do Contrato: <strong id="sim-prazo-label" style="color:var(--brand); font-size:1.1rem">36 meses</strong></label>
-            <div class="plan-slider-wrap" style="margin-top:1rem">
-              <input type="range" id="sim-slider" min="20" max="56" step="1" value="36" oninput="updateAll()">
-              <div style="display:flex; justify-content:space-between; font-size:.6rem; font-weight:800; color:var(--muted); margin-top:.5rem">
-                <span>20 MESES</span><span>36 MESES</span><span>56 MESES</span>
-              </div>
+
+        <div class="panel" style="margin-top:1.5rem">
+          <div class="panel-header">
+            <div class="panel-title">
+              <i class="fa-solid fa-sliders" style="color:var(--purple)"></i>
+              Parâmetros
             </div>
           </div>
+          <div class="panel-body">
+            <div class="form-group">
+              <label>KM Mensal</label>
+              <div class="cr-field-value" onclick="openKmPicker()" id="km-display">2500</div>
+            </div>
+            <div class="form-group" style="margin-top:1rem">
+              <label>Preço Gasolina (R$/L)</label>
+              <input type="number" id="gas-price" value="6.50" step="0.01" onchange="calculateAll()">
+            </div>
+          </div>
+        </div>
+      </div>
 
-          <!-- Highlight Card -->
-          <div style="background:var(--sidebar); border-radius:24px; padding:2rem; color:#fff; position:relative; overflow:hidden; box-shadow:0 20px 40px rgba(0,0,0,0.15)">
-            <div style="position:absolute; right:-20px; bottom:-20px; font-size:8rem; opacity:0.04; transform:rotate(-15deg)"><i class="fa-solid fa-bolt"></i></div>
-            <div style="display:flex; justify-content:space-between; align-items:center; position:relative; z-index:1">
-              <div>
-                <div style="font-size:.65rem; font-weight:800; opacity:.5; text-transform:uppercase; letter-spacing:.1em; margin-bottom:.5rem">Plano WS125 Elétrica</div>
-                <div id="sim-mensal" class="syne" style="font-size:2.8rem; font-weight:800; line-height:1">R$ 1.335</div>
-                <div id="sim-semanal" class="mono" style="font-size:.8rem; opacity:.6; margin-top:.6rem">~ R$ 308,00 / semana</div>
-              </div>
-              <div style="text-align:right">
-                <div style="font-size:.65rem; font-weight:800; opacity:.5; text-transform:uppercase; letter-spacing:.1em; margin-bottom:.5rem">Economia Mensal</div>
-                <div id="sim-economia-val" class="syne" style="font-size:2.8rem; font-weight:800; line-height:1; color:var(--green)">R$ 1.150</div>
-                <div id="sim-economia-anual" class="mono" style="font-size:.8rem; color:var(--green); margin-top:.6rem">R$ 13.800,00 / ano</div>
-              </div>
+      <!-- Right Panel: Plan Selection -->
+      <div>
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-title">
+              <i class="fa-solid fa-calendar-days" style="color:var(--green)"></i>
+              Plano de Assinatura
+            </div>
+          </div>
+          <div class="panel-body">
+            <div class="form-group">
+              <label>Selecione o Prazo</label>
+              <select id="plan-select" onchange="updatePlanDisplay()">
+                <option value="20">20 meses</option>
+                <option value="21">21 meses</option>
+                <option value="22">22 meses</option>
+                <option value="23">23 meses</option>
+                <option value="24" selected>24 meses</option>
+                <option value="25">25 meses</option>
+                <option value="26">26 meses</option>
+                <option value="27">27 meses</option>
+                <option value="28">28 meses</option>
+                <option value="29">29 meses</option>
+                <option value="30">30 meses</option>
+                <option value="31">31 meses</option>
+                <option value="32">32 meses</option>
+                <option value="33">33 meses</option>
+                <option value="34">34 meses</option>
+                <option value="35">35 meses</option>
+                <option value="36">36 meses</option>
+                <option value="37">37 meses</option>
+                <option value="38">38 meses</option>
+                <option value="39">39 meses</option>
+                <option value="40">40 meses</option>
+                <option value="41">41 meses</option>
+                <option value="42">42 meses</option>
+                <option value="43">43 meses</option>
+                <option value="44">44 meses</option>
+                <option value="45">45 meses</option>
+                <option value="46">46 meses</option>
+                <option value="47">47 meses</option>
+                <option value="48">48 meses</option>
+                <option value="49">49 meses</option>
+                <option value="50">50 meses</option>
+                <option value="51">51 meses</option>
+                <option value="52">52 meses</option>
+                <option value="53">53 meses</option>
+                <option value="54">54 meses</option>
+                <option value="55">55 meses</option>
+                <option value="56">56 meses</option>
+              </select>
             </div>
             
-            <div style="margin-top:2rem">
-              <div style="display:flex; justify-content:space-between; font-size:.7rem; margin-bottom:.6rem; font-weight:700">
-                <span style="opacity:.8">Custo Combustão (Estimado): <strong id="sim-custo-combustao" class="mono">R$ 2.485</strong></span>
-                <span style="color:var(--green)">Vantagem: <strong id="sim-eficiencia-pct">54%</strong></span>
-              </div>
-              <div style="height:12px; background:rgba(255,255,255,0.1); border-radius:20px; overflow:hidden">
-                <div id="sim-comp-bar" style="height:100%; background:linear-gradient(90deg, #0ea5e9, #22d3ee); width:54%; transition:.5s"></div>
+            <div style="margin-top:1.5rem; padding:1.25rem; background:#f8fafc; border-radius:12px">
+              <div style="display:flex; flex-direction:column; gap:1.25rem">
+                <div>
+                  <div style="font-size:.65rem; color:var(--muted); font-weight:800; text-transform:uppercase; margin-bottom:.25rem">Mensalidade</div>
+                  <div style="font-family:'Syne'; font-weight:800; font-size:1.8rem; color:var(--brand)" id="plan-monthly">R$ 0,00</div>
+                </div>
+                
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; border-top:1px solid var(--border); padding-top:1.25rem;">
+                  <div>
+                    <div style="font-size:.65rem; color:var(--muted); font-weight:800; text-transform:uppercase; margin-bottom:.25rem">Custo Semanal</div>
+                    <div style="font-family:'DM Mono'; font-weight:700; font-size:1.2rem; color:var(--text)" id="plan-weekly">R$ 0,00</div>
+                  </div>
+                  <div>
+                    <div style="font-size:.65rem; color:var(--muted); font-weight:800; text-transform:uppercase; margin-bottom:.25rem">Custo Diário</div>
+                    <div style="font-family:'DM Mono'; font-weight:700; font-size:1.2rem; color:var(--text)" id="plan-daily">R$ 0,00</div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
         </div>
       </div>
-
-      <div class="panel">
-        <div class="panel-header">
-          <span class="panel-title"><i class="fa-solid fa-table" style="color:var(--purple)"></i> Comparativo de Planos</span>
-        </div>
-        <div class="tbl-wrap">
-          <table class="tbl">
-            <thead>
-              <tr><th>Prazo</th><th class="r">Mensal</th><th class="r">Semanal</th><th class="r">Diária</th><th class="r">Total</th></tr>
-            </thead>
-            <tbody id="plan-tbody"></tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-
-    <!-- Right Column: Combustion Expenses -->
-    <div style="display:flex; flex-direction:column; gap:1.5rem">
-      <div class="panel" style="flex:1; display:flex; flex-direction:column">
-        <div class="panel-header">
-          <span class="panel-title"><i class="fa-solid fa-wrench" style="color:var(--amber)"></i> Despesas de Rodagem (Combustão)</span>
-          <button class="btn btn-primary btn-sm" onclick="addItem()"><i class="fa-solid fa-plus"></i> Adicionar</button>
-        </div>
-        <div class="panel-body" style="flex:1">
-          <div id="items-list"></div>
-          
-          <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-top:1.5rem">
-            <div style="background:#eff6ff; border:1px solid #bfdbfe; padding:1.25rem; border-radius:16px">
-              <div style="font-size:.6rem; font-weight:800; color:#1e40af; text-transform:uppercase; margin-bottom:.4rem">Custo Diário (Combustão)</div>
-              <div id="res-comb-dia" class="syne" style="font-size:1.6rem; font-weight:800">R$ 0,00</div>
-            </div>
-            <div style="background:#fff7ed; border:1px solid #ffedd5; padding:1.25rem; border-radius:16px">
-              <div style="font-size:.6rem; font-weight:800; color:#9a3412; text-transform:uppercase; margin-bottom:.4rem">Gasto Mensal Total</div>
-              <div id="res-comb-mes" class="syne" style="font-size:1.6rem; font-weight:800; color:var(--amber)">R$ 0,00</div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-  </div> <!-- /grid -->
-
-</div> <!-- /app-container -->
-
-<!-- Modal Flow -->
-<div class="modal-overlay" id="modal-flow">
-  <div class="modal">
-    <div class="modal-header">
-      <h3 id="modal-title">Novo Fluxo</h3>
-      <button class="btn-icon" onclick="closeModal()"><i class="fa-solid fa-xmark"></i></button>
-    </div>
-    <div class="modal-body">
-      <div style="display:flex; flex-direction:column; gap:1rem">
-        <div class="form-group">
-          <label>Nome do Cliente</label>
-          <input type="text" id="flow-nome" placeholder="Nome Completo">
-        </div>
-        <div class="form-group">
-          <label>Telefone / WhatsApp</label>
-          <input type="tel" id="flow-tel" placeholder="(11) 99999-9999">
-        </div>
-        <div id="flow-details" style="background:#f8fafc; padding:1rem; border-radius:12px; font-size:.8rem">
-          <!-- Rendered summary -->
-        </div>
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
-      <button class="btn btn-primary" onclick="confirmFlow()"><i class="fa-solid fa-check"></i> Gerar no Sistema</button>
     </div>
   </div>
 </div>
 
-<div id="toast-area"></div>
+<!-- Admin View -->
+<div class="admin-view" id="adminView">
+  <div class="app-container">
+    <header>
+      <div class="logo-wrap">
+        <div class="logo-icon"><i class="fa-solid fa-shield-halved"></i></div>
+        <div class="logo-text">Admin Panel</div>
+      </div>
+      <div class="header-actions">
+        <button class="btn btn-ghost" onclick="exitAdmin()">
+          <i class="fa-solid fa-arrow-left"></i> Voltar
+        </button>
+      </div>
+    </header>
 
-<div class="picker-overlay" id="picker-overlay">
-  <div class="picker-container">
-    <div class="picker-header">
-      <h3 id="picker-title" class="syne">Selecionar Valor</h3>
-      <div style="display:flex;gap:.5rem">
-        <button class="btn btn-ghost" onclick="closePicker()">Cancelar</button>
-        <button class="btn btn-primary" onclick="confirmPicker()">Confirmar</button>
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title">
+          <i class="fa-solid fa-users"></i>
+          Leads Capturados
+        </div>
+        <button class="btn btn-sm btn-ghost" onclick="exportLeads()">
+          <i class="fa-solid fa-download"></i> Exportar
+        </button>
+      </div>
+      <div class="panel-body">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>Nome</th>
+              <th>Telefone</th>
+              <th>WhatsApp</th>
+              <th>Plano</th>
+              <th>Mensalidade</th>
+              <th>Data</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="leads-tbody">
+            <tr>
+              <td colspan="7" style="text-align:center; color:var(--muted); padding:2rem">
+                Nenhum lead capturado ainda
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </div>
-    <div class="picker-wheel-wrap">
-      <div class="picker-selection-bar"></div>
-      <div class="picker-wheel" id="picker-w-1"></div>
-      <div class="picker-wheel" id="picker-w-2"></div>
-      <div class="picker-wheel" id="picker-w-3"></div>
-      <div style="font-weight:800;font-size:1.5rem;color:var(--brand);display:flex;align-items:center;padding:0 .5rem">,</div>
-      <div class="picker-wheel" id="picker-w-4"></div>
-      <div class="picker-wheel" id="picker-w-5"></div>
+  </div>
+</div>
+
+<!-- Picker Modal -->
+<div class="picker-overlay" id="picker-overlay" onclick="if(event.target===this) closePicker()">
+  <div class="picker-container">
+    <div class="picker-header">
+      <h3 id="picker-title" style="font-family:'Syne'; font-weight:700">Selecione o Valor</h3>
+      <button class="btn btn-sm btn-ghost" onclick="closePicker()">Cancelar</button>
     </div>
+    <div class="picker-wheel-wrap" id="picker-wheels"></div>
+    <button class="btn btn-primary" style="width:100%; margin-top:1rem; justify-content:center" onclick="confirmPicker()">
+      Confirmar
+    </button>
   </div>
 </div>
 
 <script>
-// TABLE DATA (Same as index.html)
-const TABLE = {
-  20:{coef:0.0898,mensal:1740.00,total:34800.00},
-  21:{coef:0.0872,mensal:1690.00,total:35490.00},
-  22:{coef:0.0848,mensal:1644.00,total:36168.00},
-  23:{coef:0.0827,mensal:1603.00,total:36869.00},
-  24:{coef:0.0807,mensal:1564.00,total:37536.00},
-  25:{coef:0.0789,mensal:1530.00,total:38250.00},
-  26:{coef:0.0772,mensal:1497.00,total:38922.00},
-  27:{coef:0.0757,mensal:1468.00,total:39636.00},
-  28:{coef:0.0743,mensal:1440.00,total:40320.00},
-  29:{coef:0.0734,mensal:1422.00,total:41238.00},
-  30:{coef:0.0728,mensal:1411.54,total:42346.00},
-  31:{coef:0.0723,mensal:1401.16,total:43436.00},
-  32:{coef:0.0716,mensal:1387.62,total:44404.00},
-  33:{coef:0.0709,mensal:1374.36,total:45354.00},
-  34:{coef:0.0702,mensal:1360.35,total:46252.00},
-  35:{coef:0.0696,mensal:1347.57,total:47165.00},
-  36:{coef:0.0689,mensal:1335.00,total:48060.00},
-  37:{coef:0.0683,mensal:1322.62,total:48937.00},
-  38:{coef:0.0676,mensal:1310.42,total:49796.00},
-  39:{coef:0.0670,mensal:1298.38,total:50637.00},
-  40:{coef:0.0664,mensal:1285.50,total:51420.00},
-  41:{coef:0.0657,mensal:1273.76,total:52224.00},
-  42:{coef:0.0652,mensal:1262.14,total:53010.00},
-  43:{coef:0.0646,mensal:1250.65,total:53778.00},
-  44:{coef:0.0640,mensal:1239.27,total:54528.00},
-  45:{coef:0.0634,mensal:1228.00,total:55260.00},
-  46:{coef:0.0628,mensal:1215.83,total:55928.00},
-  47:{coef:0.0622,mensal:1204.74,total:56623.00},
-  48:{coef:0.0616,mensal:1193.75,total:57300.00},
-  49:{coef:0.0611,mensal:1182.84,total:57959.00},
-  50:{coef:0.0605,mensal:1172.00,total:58600.00},
-  51:{coef:0.0599,mensal:1161.24,total:59223.00},
-  52:{coef:0.0593,mensal:1149.54,total:59776.00},
-  53:{coef:0.0588,mensal:1138.91,total:60362.00},
-  54:{coef:0.0582,mensal:1128.33,total:60930.00},
-  55:{coef:0.0577,mensal:1117.82,total:61480.00},
-  56:{coef:0.0572,mensal:1107.36,total:62012.00},
+// State
+let kmMensal = 2500;
+let gasPrice = 6.50;
+let selectedPlan = 24;
+
+let items = [
+  {
+    id: 'gas',
+    name: 'Gasolina (Litro)',
+    type: 'combustivel',
+    icon: 'fa-gas-pump',
+    kmPerLiter: 35,
+    monthly: 0
+  },
+  {
+    id: 'oil',
+    name: 'Óleo (1L)',
+    type: 'manutencao',
+    icon: 'fa-oil-can',
+    unitCost: 45.00,
+    intervalKm: 1500,
+    monthly: 0
+  },
+  {
+    id: 'tires',
+    name: 'Pneus (Par)',
+    type: 'manutencao',
+    icon: 'fa-circle',
+    unitCost: 480.00,
+    intervalKm: 12000,
+    monthly: 0
+  },
+  {
+    id: 'chain',
+    name: 'Kit Relação',
+    type: 'manutencao',
+    icon: 'fa-link',
+    unitCost: 350.00,
+    intervalKm: 12000,
+    monthly: 0
+  },
+  {
+    id: 'brakes',
+    name: 'Pastilhas de Freio',
+    type: 'manutencao',
+    icon: 'fa-circle-stop',
+    unitCost: 120.00,
+    intervalKm: 6000,
+    monthly: 0
+  }
+];
+
+// Plan pricing
+const planPrices = {
+  20: { monthly: 1740.00, total: 34800.00 },
+  21: { monthly: 1690.00, total: 35490.00 },
+  22: { monthly: 1644.00, total: 36168.00 },
+  23: { monthly: 1603.00, total: 36869.00 },
+  24: { monthly: 1564.00, total: 37536.00 },
+  25: { monthly: 1530.00, total: 38250.00 },
+  26: { monthly: 1497.00, total: 38922.00 },
+  27: { monthly: 1468.00, total: 39636.00 },
+  28: { monthly: 1440.00, total: 40320.00 },
+  29: { monthly: 1422.00, total: 41238.00 },
+  30: { monthly: 1411.54, total: 42346.00 },
+  31: { monthly: 1401.16, total: 43436.00 },
+  32: { monthly: 1387.62, total: 44404.00 },
+  33: { monthly: 1374.36, total: 45354.00 },
+  34: { monthly: 1360.35, total: 46252.00 },
+  35: { monthly: 1347.57, total: 47165.00 },
+  36: { monthly: 1335.00, total: 48060.00 },
+  37: { monthly: 1322.62, total: 48937.00 },
+  38: { monthly: 1310.42, total: 49796.00 },
+  39: { monthly: 1298.38, total: 50637.00 },
+  40: { monthly: 1285.50, total: 51420.00 },
+  41: { monthly: 1273.76, total: 52224.00 },
+  42: { monthly: 1262.14, total: 53010.00 },
+  43: { monthly: 1250.65, total: 53778.00 },
+  44: { monthly: 1239.27, total: 54528.00 },
+  45: { monthly: 1228.00, total: 55260.00 },
+  46: { monthly: 1215.83, total: 55928.00 },
+  47: { monthly: 1204.74, total: 56623.00 },
+  48: { monthly: 1193.75, total: 57300.00 },
+  49: { monthly: 1182.84, total: 57959.00 },
+  50: { monthly: 1172.00, total: 58600.00 },
+  51: { monthly: 1161.24, total: 59223.00 },
+  52: { monthly: 1149.54, total: 59776.00 },
+  53: { monthly: 1138.91, total: 60362.00 },
+  54: { monthly: 1128.33, total: 60930.00 },
+  55: { monthly: 1117.82, total: 61480.00 },
+  56: { monthly: 1107.36, total: 62012.00 }
 };
 
-// Utils
-const fmt = v => (v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
-const uid = () => 'id_'+Date.now()+'_'+Math.random().toString(36).slice(2,7);
-const el = id => document.getElementById(id);
+// Leads storage
+const LEADS_KEY = 'jstart_leads';
 
-function toast(msg, type='success'){
-  const t = document.createElement('div');
-  t.className = `toast ${type}`;
-  t.innerHTML = `<i class="fa-solid fa-circle-check"></i> ${msg}`;
-  el('toast-area').appendChild(t);
-  setTimeout(()=>t.remove(), 3000);
+function getLeads() {
+  const stored = localStorage.getItem(LEADS_KEY);
+  return stored ? JSON.parse(stored) : [];
 }
 
-// Global State
-let simulator = {
-  km_mensal: 3000,
-  caucao: 0,
-  prazo: 36,
-  items: [
-    {id:'s1', label:'Gasolina (L)', custo:6.20, consumo_km:35, icon:'fa-gas-pump', type:'combustivel', valor_f_mensal: 0},
-    {id:'s2', label:'\xd3leo (1L)', custo:45, intervalo_km:3000, icon:'fa-oil-can', type:'manut', valor_f_mensal: 0},
-    {id:'s3', label:'Pneus (Par)', custo:480, intervalo_km:18000, icon:'fa-circle-dot', type:'manut', valor_f_mensal: 0},
-    {id:'s4', label:'Kit Rela\xe7\xe3o', custo:350, intervalo_km:15000, icon:'fa-gear', type:'manut', valor_f_mensal: 0}
-  ]
-};
-
-// Initialization
-function init(){
-  const saved = localStorage.getItem('jstart_simulator_config');
-  if(saved) simulator = JSON.parse(saved);
-  
-  // Listen for changes from main window
-  window.addEventListener('storage', (e) => {
-    if(e.key === 'jstart_db'){
-      toast('Dados sincronizados do ERP', 'info');
-    }
-  });
-
-  renderItems();
-  renderPlanTable();
-  updateAll();
+function saveLead(lead) {
+  const leads = getLeads();
+  leads.push(lead);
+  localStorage.setItem(LEADS_KEY, JSON.stringify(leads));
 }
 
-function updateAll(){
-  simulator.km_mensal = parseFloat(el('sim-km-mensal').value) || 0;
-  simulator.prazo = parseInt(el('sim-slider').value);
-  
-  const data = TABLE[simulator.prazo];
-  if(!data) return;
+// Utility
+function fmt(val) {
+  return `R$ ${parseFloat(val).toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+}
 
-  // Reduce Mensal by Caucao portion natively
-  let calcMensal = data.mensal - (simulator.caucao / simulator.prazo);
-  if(calcMensal < 0) calcMensal = 0;
+function uid() {
+  return 'item_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+}
 
-  let totalCombustion = 0;
-  simulator.items.forEach(item => {
-    if(item.valor_f_mensal > 0) {
-      totalCombustion += item.valor_f_mensal;
+function toast(msg, type = 'default') {
+  const div = document.createElement('div');
+  div.className = `toast ${type}`;
+  div.innerHTML = `<i class="fa-solid fa-check-circle"></i> ${msg}`;
+  document.body.appendChild(div);
+  setTimeout(() => div.remove(), 3000);
+}
+
+// Calculate
+function calculateAll() {
+  kmMensal = parseInt(document.getElementById('km-display').textContent) || 2500;
+  gasPrice = parseFloat(document.getElementById('gas-price').value) || 6.50;
+
+  let totalMonthly = 0;
+
+  items.forEach(item => {
+    if (item.type === 'combustivel') {
+      // Gasoline calculation
+      const litersPerMonth = kmMensal / item.kmPerLiter;
+      item.monthly = litersPerMonth * gasPrice;
     } else {
-      if(item.type === 'combustivel'){
-        totalCombustion += (simulator.km_mensal / (item.consumo_km||1)) * item.custo;
-      } else {
-        totalCombustion += (simulator.km_mensal / (item.intervalo_km||1)) * item.custo;
-      }
+      // Maintenance items
+      const timesPerMonth = kmMensal / item.intervalKm;
+      item.monthly = item.unitCost * timesPerMonth;
     }
+    totalMonthly += item.monthly;
   });
 
-  const semanal = Math.round(calcMensal * 12 / 52);
-  const economia = totalCombustion - calcMensal;
-  const pct = Math.round((calcMensal / totalCombustion) * 100);
-
-  el('sim-prazo-label').textContent = simulator.prazo + ' meses';
-  el('sim-mensal').textContent = fmt(calcMensal);
-  el('sim-semanal').textContent = `~ ${fmt(semanal)} / semana`;
-  el('sim-economia-val').textContent = fmt(economia);
-  el('sim-economia-anual').textContent = `${fmt(economia * 12)} / ano`;
-  el('sim-custo-combustao').textContent = fmt(totalCombustion);
-  el('sim-eficiencia-pct').textContent = (100 - pct) + '%';
-  el('sim-comp-bar').style.width = Math.min(100, pct) + '%';
+  // Update display
+  renderItems();
   
-  el('res-comb-dia').textContent = fmt(totalCombustion / 30);
-  el('res-comb-mes').textContent = fmt(totalCombustion);
-
-  localStorage.setItem('jstart_simulator_config', JSON.stringify(simulator));
+  const dailyCost = totalMonthly / 30;
+  document.getElementById('daily-cost').textContent = fmt(dailyCost);
+  document.getElementById('monthly-total').textContent = fmt(totalMonthly);
 }
 
-function renderItems(){
-  const list = el('items-list');
-  list.innerHTML = simulator.items.map(item => `
-    <div class="cost-row">
-      <div class="cr-icon"><i class="fa-solid ${item.icon}"></i></div>
-      <div>
-        <input type="text" value="${item.label}" class="sim-input-bare" onchange="updateItem('${item.id}','label',this.value)">
-        <div style="font-size:.55rem; color:var(--muted); font-weight:800; text-transform:uppercase">${item.type==='combustivel'?'Consumo':'Manuten\xe7\xe3o'}</div>
-      </div>
-      <div>
-        <div class="sim-field-label">Custo Unit. (R$)</div>
-        <div class="sim-input-box" onclick="openPicker('${item.id}','custo','${item.label}')">${item.custo.toFixed(2)}</div>
-      </div>
-      <div>
-        <div class="sim-field-label">${item.type==='combustivel'?'KM/L':'Interv. (KM)'}</div>
-        <div class="sim-input-box" onclick="openPicker('${item.id}','${item.type==='combustivel'?'consumo_km':'intervalo_km'}','${item.label}')">${item.type==='combustivel'?(item.consumo_km||0):(item.intervalo_km||0)}</div>
-      </div>
-      <div>
-        <div class="sim-field-label">Gasto Mensal (R$)</div>
-        <div class="sim-input-box" onclick="openPicker('${item.id}','valor_f_mensal','${item.label}')" style="background:#fff9eb; border-color:#fee08b">${(item.valor_f_mensal||0).toFixed(2)}</div>
-      </div>
-      <button class="btn-icon del" onclick="removeItem('${item.id}')"><i class="fa-solid fa-trash"></i></button>
-    </div>
-  `).join('');
+function renderItems() {
+  const container = document.getElementById('items-container');
+  container.innerHTML = items.map(item => {
+    if (item.type === 'combustivel') {
+      return `
+        <div class="cost-row">
+          <div class="cr-icon"><i class="fa-solid ${item.icon}"></i></div>
+          <div class="cr-name">
+            <div class="cr-name-main">${item.name}</div>
+            <div class="cr-name-sub">Consumo</div>
+          </div>
+          <div class="cr-field">
+            <div class="cr-field-label">KM/L</div>
+            <div class="cr-field-value" onclick="openItemPicker('${item.id}', 'kmPerLiter', '${item.name} - KM/L')">${item.kmPerLiter}</div>
+          </div>
+          <div class="cr-field">
+            <div class="cr-field-label">Gasto Mensal (R$)</div>
+            <div class="cr-field-value" style="background:#e0f2fe; border-color:#0284c7; color:#0284c7; font-weight:700">${item.monthly.toFixed(2)}</div>
+          </div>
+          <button class="btn-icon del" onclick="removeItem('${item.id}')"><i class="fa-solid fa-trash"></i></button>
+        </div>
+      `;
+    } else {
+      return `
+        <div class="cost-row">
+          <div class="cr-icon"><i class="fa-solid ${item.icon}"></i></div>
+          <div class="cr-name">
+            <div class="cr-name-main">${item.name}</div>
+            <div class="cr-name-sub">Manutenção</div>
+          </div>
+          <div class="cr-field">
+            <div class="cr-field-label">Custo Unit (R$)</div>
+            <div class="cr-field-value" onclick="openItemPicker('${item.id}', 'unitCost', '${item.name} - Custo')">${item.unitCost.toFixed(2)}</div>
+          </div>
+          <div class="cr-field">
+            <div class="cr-field-label">Interv. (KM)</div>
+            <div class="cr-field-value" onclick="openItemPicker('${item.id}', 'intervalKm', '${item.name} - Intervalo')">${item.intervalKm}</div>
+          </div>
+          <div class="cr-field">
+            <div class="cr-field-label">Gasto Mensal (R$)</div>
+            <div class="cr-field-value" style="background:#e0f2fe; border-color:#0284c7; color:#0284c7; font-weight:700">${item.monthly.toFixed(2)}</div>
+          </div>
+          <button class="btn-icon del" onclick="removeItem('${item.id}')"><i class="fa-solid fa-trash"></i></button>
+        </div>
+      `;
+    }
+  }).join('');
 }
 
-function updateItem(id, field, value){
-  const idx = simulator.items.findIndex(i => i.id === id);
-  if(idx >= 0){
-    if(field === 'label') simulator.items[idx][field] = value;
-    else simulator.items[idx][field] = parseFloat(value) || 0;
-    updateAll();
-    renderItems();
+function updatePlanDisplay() {
+  selectedPlan = parseInt(document.getElementById('plan-select').value);
+  const plan = planPrices[selectedPlan];
+  
+  // Cálculo Custo Diário e Semanal
+  const daily = plan.monthly / 30;
+  const weekly = daily * 7;
+  
+  document.getElementById('plan-monthly').textContent = fmt(plan.monthly);
+  document.getElementById('plan-weekly').textContent = fmt(weekly);
+  document.getElementById('plan-daily').textContent = fmt(daily);
+}
+
+// Picker functions
+let currentPicker = { itemId: null, field: null, isKm: false };
+
+function openKmPicker() {
+  currentPicker = { itemId: null, field: null, isKm: true };
+  document.getElementById('picker-title').textContent = 'KM Mensal';
+  
+  const value = kmMensal.toString().padStart(5, '0');
+  renderPickerWheels(value, false);
+  
+  document.getElementById('picker-overlay').classList.add('open');
+}
+
+function openItemPicker(itemId, field, label) {
+  currentPicker = { itemId, field, isKm: false };
+  document.getElementById('picker-title').textContent = label;
+  
+  const item = items.find(i => i.id === itemId);
+  const value = item[field];
+  const isInteger = field === 'intervalKm' || field === 'kmPerLiter';
+  
+  let valueStr;
+  if (isInteger) {
+    valueStr = value.toString().padStart(5, '0');
+  } else {
+    const intPart = Math.floor(value).toString().padStart(3, '0');
+    const decPart = Math.round((value - Math.floor(value)) * 100).toString().padStart(2, '0');
+    valueStr = intPart + decPart;
+  }
+  
+  renderPickerWheels(valueStr, !isInteger);
+  
+  document.getElementById('picker-overlay').classList.add('open');
+}
+
+function renderPickerWheels(valueStr, includeDecimals) {
+  const container = document.getElementById('picker-wheels');
+  
+  let html = '<div class="picker-selection-bar"></div>';
+  
+  // Integer wheels
+  for (let i = 0; i < 5; i++) {
+    html += `<div class="picker-wheel" id="wheel-${i}"></div>`;
+  }
+  
+  // Decimal wheels
+  if (includeDecimals) {
+    html += '<div style="font-weight:800;font-size:1.8rem;color:var(--brand);display:flex;align-items:center;padding:0 .25rem">,</div>';
+    html += '<div class="picker-wheel" id="wheel-5"></div>';
+    html += '<div class="picker-wheel" id="wheel-6"></div>';
+  }
+  
+  container.innerHTML = html;
+  
+  // Populate wheels
+  for (let i = 0; i < 5; i++) {
+    populateWheel(`wheel-${i}`, valueStr[i]);
+  }
+  
+  if (includeDecimals) {
+    populateWheel('wheel-5', valueStr[5]);
+    populateWheel('wheel-6', valueStr[6]);
   }
 }
 
-// Picker Drum Logic
-let currentPicker = { id:null, field:null };
-
-function openPicker(id, field, label){
-  currentPicker = { id, field };
-  el('picker-title').textContent = label;
+function populateWheel(wheelId, currentValue) {
+  const wheel = document.getElementById(wheelId);
+  if (!wheel) return;
   
-  let valNum = 0;
-  if(id === 'km_mensal') valNum = simulator.km_mensal;
-  else if(id === 'caucao') valNum = simulator.caucao;
-  else valNum = simulator.items.find(i=>i.id===id)[field] || 0;
-  
-  const floatVal = parseFloat(valNum);
-  const integerPart = Math.floor(floatVal).toString().padStart(5, '0'); // Support up to 99999
-  const decimalPart = Math.round((floatVal - Math.floor(floatVal)) * 100).toString().padStart(2, '0');
-  
-  // Update wheels to show 5 integer digits for KM, or just 3 for costs but we'll standardize 5 for safety
-  let htmlWheels = `
-    <div class="picker-selection-bar"></div>
-    <div class="picker-wheel" id="picker-w-v1"></div>
-    <div class="picker-wheel" id="picker-w-v2"></div>
-    <div class="picker-wheel" id="picker-w-1"></div>
-    <div class="picker-wheel" id="picker-w-2"></div>
-    <div class="picker-wheel" id="picker-w-3"></div>
-  `;
-  
-  if(field !== 'km_mensal'){
-     htmlWheels += `
-       <div style="font-weight:800;font-size:1.5rem;color:var(--brand);display:flex;align-items:center;padding:0 .5rem">,</div>
-       <div class="picker-wheel" id="picker-w-4"></div>
-       <div class="picker-wheel" id="picker-w-5"></div>
-     `;
-  }
-  
-  el('picker-overlay').querySelector('.picker-wheel-wrap').innerHTML = htmlWheels;
-
-  renderWheel('picker-w-v1', integerPart[0], 0, 9);
-  renderWheel('picker-w-v2', integerPart[1], 0, 9);
-  renderWheel('picker-w-1', integerPart[2], 0, 9);
-  renderWheel('picker-w-2', integerPart[3], 0, 9);
-  renderWheel('picker-w-3', integerPart[4], 0, 9);
-  if(field !== 'km_mensal'){
-    renderWheel('picker-w-4', decimalPart[0], 0, 9);
-    renderWheel('picker-w-5', decimalPart[1], 0, 9);
-  }
-  
-  el('picker-overlay').classList.add('open');
-}
-
-function renderWheel(wheelId, current, min, max){
-  const wheel = el(wheelId);
-  if(!wheel) return;
   let html = '<div></div><div></div>';
-  for(let i=min; i<=max; i++){
-    html += `<div class="${i==current?'selected':''}" data-val="${i}">${i}</div>`;
+  for (let i = 0; i <= 9; i++) {
+    // Adicionado onclick para tornar itens clicáveis
+    html += `<div class="${i == currentValue ? 'selected' : ''}" data-val="${i}" onclick="selectWheelItem('${wheelId}', ${i})">${i}</div>`;
   }
   html += '<div></div><div></div>';
+  
   wheel.innerHTML = html;
   
+  // 50px de altura de cada item no css. 2 itens vazios no topo = offset 100
   setTimeout(() => {
-    const target = wheel.querySelector(`div[data-val="${current}"]`);
-    if(target) wheel.scrollTop = target.offsetTop - 80;
+    const target = wheel.querySelector(`div[data-val="${currentValue}"]`);
+    if (target) wheel.scrollTop = target.offsetTop - 100;
   }, 10);
-
+  
   wheel.onscroll = () => {
-    const idx = Math.round(wheel.scrollTop / 40);
+    const idx = Math.round(wheel.scrollTop / 50);
     const divs = wheel.querySelectorAll('div[data-val]');
     divs.forEach((d, i) => d.classList.toggle('selected', i === idx));
   };
 }
 
-function closePicker(){ el('picker-overlay').classList.remove('open'); }
-
-function confirmPicker(){
-  const getW = id => el(id)?.querySelector('.selected')?.dataset.val || '0';
-  let val = 0;
-  if(currentPicker.field === 'km_mensal'){
-    val = parseFloat(`${getW('picker-w-v1')}${getW('picker-w-v2')}${getW('picker-w-1')}${getW('picker-w-2')}${(getW('picker-w-3'))}`);
-    simulator.km_mensal = val;
-    el('sim-km-mensal').value = val;
-    el('sim-km-mensal-trigger').textContent = val;
-    updateAll();
-  } else if(currentPicker.field === 'caucao') {
-    val = parseFloat(`${getW('picker-w-v1')}${getW('picker-w-v2')}${getW('picker-w-1')}${getW('picker-w-2')}${getW('picker-w-3')}.${getW('picker-w-4')}${getW('picker-w-5')}`);
-    simulator.caucao = val;
-    el('sim-caucao-trigger').textContent = val.toLocaleString('pt-BR',{minimumFractionDigits:2});
-    updateAll();
-  } else {
-    val = parseFloat(`${getW('picker-w-v1')}${getW('picker-w-v2')}${getW('picker-w-1')}${getW('picker-w-2')}${getW('picker-w-3')}.${getW('picker-w-4')}${getW('picker-w-5')}`);
-    updateItem(currentPicker.id, currentPicker.field, val);
+// Função para centralizar no clique do item
+window.selectWheelItem = function(wheelId, val) {
+  const wheel = document.getElementById(wheelId);
+  const target = wheel.querySelector(`div[data-val="${val}"]`);
+  if (target) {
+    wheel.scrollTo({
+      top: target.offsetTop - 100, // Centraliza no item (100px compensa as duas div vazias)
+      behavior: 'smooth'
+    });
   }
+};
+
+function closePicker() {
+  document.getElementById('picker-overlay').classList.remove('open');
+}
+
+function confirmPicker() {
+  const getValue = (wheelId) => {
+    const wheel = document.getElementById(wheelId);
+    const selected = wheel?.querySelector('.selected');
+    return selected?.dataset.val || '0';
+  };
+  
+  if (currentPicker.isKm) {
+    const value = parseInt(`${getValue('wheel-0')}${getValue('wheel-1')}${getValue('wheel-2')}${getValue('wheel-3')}${getValue('wheel-4')}`);
+    kmMensal = value;
+    document.getElementById('km-display').textContent = value;
+    calculateAll();
+  } else {
+    const item = items.find(i => i.id === currentPicker.itemId);
+    const isInteger = currentPicker.field === 'intervalKm' || currentPicker.field === 'kmPerLiter';
+    
+    if (isInteger) {
+      const value = parseInt(`${getValue('wheel-0')}${getValue('wheel-1')}${getValue('wheel-2')}${getValue('wheel-3')}${getValue('wheel-4')}`);
+      item[currentPicker.field] = value;
+    } else {
+      const value = parseFloat(`${getValue('wheel-0')}${getValue('wheel-1')}${getValue('wheel-2')}${getValue('wheel-3')}${getValue('wheel-4')}.${getValue('wheel-5')}${getValue('wheel-6')}`);
+      item[currentPicker.field] = value;
+    }
+    calculateAll();
+  }
+  
   closePicker();
 }
 
-function addItem(){
-  simulator.items.push({id: uid(), label:'Novo Item', custo:0, intervalo_km:5000, icon:'fa-tag', type:'manut', valor_f_mensal:0});
-  renderItems();
-  updateAll();
+function addItem() {
+  const newId = uid();
+  items.push({
+    id: newId,
+    name: 'Novo Item',
+    type: 'manutencao',
+    icon: 'fa-tag',
+    unitCost: 100.00,
+    intervalKm: 5000,
+    monthly: 0
+  });
+  calculateAll();
 }
 
-function removeItem(id){
-  simulator.items = simulator.items.filter(i => i.id !== id);
-  renderItems();
-  updateAll();
+function removeItem(id) {
+  items = items.filter(i => i.id !== id);
+  calculateAll();
 }
 
-function renderPlanTable(){
-  const tbody = el('plan-tbody');
-  tbody.innerHTML = Object.keys(TABLE).map(k => {
-    const d = TABLE[k];
-    const sem = Math.round(d.mensal * 12 / 52);
-    return `<tr>
-      <td style="font-weight:700;color:var(--brand)">${k} meses</td>
-      <td class="r">${fmt(d.mensal)}</td>
-      <td class="r">${fmt(sem)}</td>
-      <td class="r">${fmt(d.mensal / 30)}</td>
-      <td class="r mono" style="font-weight:700">${fmt(d.total)}</td>
-    </tr>`;
-  }).join('');
-}
-
-// Dashboard Integration & Flows
-function openNewFlow(){
-  el('flow-nome').value = '';
-  el('flow-tel').value = '';
-  el('modal-title').textContent = 'Novo Cliente';
-  el('flow-details').innerHTML = `
-    <div style="font-weight:700; color:var(--brand); border-bottom:1px solid var(--border); padding-bottom:.5rem; margin-bottom:.5rem">Proposta Selecionada</div>
-    <div style="display:grid; grid-template-columns:1fr 1fr; gap:.5rem">
-      <div>Plano: <strong>${simulator.prazo} meses</strong></div>
-      <div>Mensalidade: <strong>${el('sim-mensal').textContent}</strong></div>
-      <div style="grid-column:1 / -1; font-size:.7rem; color:var(--muted)">Entrada / Caução: ${fmt(simulator.caucao)}</div>
-    </div>
-  `;
-  el('modal-flow').classList.add('open');
-}
-
-function closeModal(){ el('modal-flow').classList.remove('open'); }
-
-async function confirmFlow(){
-  const nome = el('flow-nome').value;
-  const tel = el('flow-tel').value;
-  if(!nome) return alert('Informe o nome');
-
-  // Load Main DB
-  const DATA_KEY = 'jstart_erp_data';
-  let dbStr = localStorage.getItem(DATA_KEY);
-  let db = dbStr ? JSON.parse(dbStr) : {clientes:[], contratos:[], motos:[]};
-
-  let finalMensal = TABLE[simulator.prazo].mensal;
-  if(simulator.caucao > 0) {
-     finalMensal -= (simulator.caucao / simulator.prazo);
-     if(finalMensal < 0) finalMensal = 0;
-  }
-
-  const cid = 'cli_' + Date.now();
-  const nc = {
-    id: cid,
-    nome,
-    telefone: tel,
-    plano: simulator.prazo,
-    caucao: simulator.caucao,
-    parcela: finalMensal,
-    status: 'Lead',
-    data_cadastro: new Date().toISOString()
+// WhatsApp Integration
+function sendWhatsAppSimulation() {
+  const plan = planPrices[selectedPlan];
+  const totalMonthly = items.reduce((sum, item) => sum + item.monthly, 0);
+  
+  // Create lead data
+  const lead = {
+    id: uid(),
+    name: 'Lead via Simulador',
+    phone: '11947887286',
+    whatsapp: '11947887286',
+    plan: `${selectedPlan} meses`,
+    monthly: plan.monthly,
+    totalCost: totalMonthly,
+    date: new Date().toISOString(),
+    status: 'Lead'
   };
   
-  db.clientes.push(nc);
+  // Save lead
+  saveLead(lead);
   
-  // Create Contract also
-  const ctid = 'ct_' + Date.now();
-  db.contratos.push({
-    id: ctid,
-    cliente_id: cid,
-    cliente_nome: nome,
-    plano: simulator.prazo,
-    caucao: simulator.caucao,
-    parcela: finalMensal,
-    status: 'Pendente',
-    inicio: new Date().toISOString().split('T')[0]
-  });
+  // Build WhatsApp message
+  const message = `*Participei do teste Ride* 🏍️
 
-  localStorage.setItem(DATA_KEY, JSON.stringify(db));
+📋 *Dados da Simulação:*
+
+*Plano Escolhido:* ${selectedPlan} meses
+*Mensalidade:* ${fmt(plan.monthly)}
+*Custo Semanal:* ${fmt((plan.monthly / 30) * 7)}
+*Custo Diário:* ${fmt(plan.monthly / 30)}
+
+*Custos Operacionais:*
+*KM Mensal:* ${kmMensal} km
+*Gasto Mensal Total:* ${fmt(totalMonthly)}
+*Custo Diário:* ${fmt(totalMonthly / 30)}
+
+Gostaria de mais informações sobre o plano!`;
+
+  const encodedMessage = encodeURIComponent(message);
+  const whatsappUrl = `https://wa.me/5511947887286?text=${encodedMessage}`;
   
-  // Try Supabase Sync if configured in main app
-  const CFG_KEY = 'jstart_erp_cfg';
-  const cfg = JSON.parse(localStorage.getItem(CFG_KEY) || '{}');
-  if(cfg.supa_url && cfg.supa_key){
-    try {
-      const supa = supabase.createClient(cfg.supa_url, cfg.supa_key);
-      const eid = cfg.supa_eid || 'jstart_default';
-      await supa.from('jstart_clientes').upsert({id: cid, empresa_id: eid, data: nc, updated_at: new Date()});
-      toast('Sincronizado com Nuvem!', 'success');
-    } catch(e) { console.error(e); }
+  window.open(whatsappUrl, '_blank');
+  toast('Redirecionando para WhatsApp...', 'success');
+}
+
+// Admin functions
+function checkAdminMode() {
+  if (window.location.hash === '#admin') {
+    document.getElementById('clientView').classList.add('hidden');
+    document.getElementById('adminView').classList.add('active');
+    loadLeadsTable();
   }
-
-  toast('Cliente e Contrato gerados no sistema!');
-  closeModal();
 }
 
-function syncData(){
-  // Trigger storage event for index.html if it's listening
-  localStorage.setItem('jstart_sync_trigger', Date.now());
-  toast('Sinal de sincroniza\xe7\xe3o enviado!');
+function exitAdmin() {
+  window.location.hash = '';
+  document.getElementById('clientView').classList.remove('hidden');
+  document.getElementById('adminView').classList.remove('active');
 }
 
-init();
+function loadLeadsTable() {
+  const leads = getLeads();
+  const tbody = document.getElementById('leads-tbody');
+  
+  if (leads.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="7" style="text-align:center; color:var(--muted); padding:2rem">
+          Nenhum lead capturado ainda
+        </td>
+      </tr>
+    `;
+    return;
+  }
+  
+  tbody.innerHTML = leads.map(lead => `
+    <tr>
+      <td>${lead.name}</td>
+      <td>${lead.phone}</td>
+      <td>${lead.whatsapp}</td>
+      <td>${lead.plan}</td>
+      <td>${fmt(lead.monthly)}</td>
+      <td>${new Date(lead.date).toLocaleDateString('pt-BR')}</td>
+      <td><span class="badge ${lead.status === 'Lead' ? 'lead' : 'active'}">${lead.status}</span></td>
+    </tr>
+  `).join('');
+}
 
+function exportLeads() {
+  const leads = getLeads();
+  const csv = 'Nome,Telefone,WhatsApp,Plano,Mensalidade,Data,Status\n' +
+    leads.map(l => `${l.name},${l.phone},${l.whatsapp},${l.plan},${l.monthly},${new Date(l.date).toLocaleDateString('pt-BR')},${l.status}`).join('\n');
+  
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `leads_${Date.now()}.csv`;
+  a.click();
+  toast('Leads exportados!', 'success');
+}
+
+// Hash change listener
+window.addEventListener('hashchange', checkAdminMode);
+
+// Init
+calculateAll();
+updatePlanDisplay();
+checkAdminMode();
 </script>
 </body>
 </html>
